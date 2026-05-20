@@ -1,0 +1,42 @@
+
+{
+  "apps": {
+    "expense-tracker": {
+      "id": "expense-tracker",
+      "name": "Expense Tracker",
+      "description": "Personal finance management app",
+      "url": "http://localhost:8080",
+      "createdAt": "2024-01-15T10:00:00.000Z"
+    },
+    "calculator": {
+      "id": "calculator",
+      "name": "Calculator",
+      "description": "Quick calculation tool",
+      "url": "http://localhost:8081",
+      "createdAt": "2024-01-15T10:00:00.000Z"
+    }
+  },
+  "notifications": [
+    {
+      "id": "sample-1",
+      "title": "Need a Calculator?",
+      "message": "Quickly calculate your expenses with our calculator tool!",
+      "link": "http://localhost:8081",
+      "linkText": "Open Calculator",
+      "type": "promo",
+      "position": "bottom-right",
+      "delay": 3,
+      "frequency": "session",
+      "frequencyHours": 24,
+      "targetApps": ["expense-tracker"],
+      "active": true,
+      "startDate": null,
+      "endDate": null,
+      "theme": "dark",
+      "customColors": null,
+      "icon": "🧮",
+      "priority": 10,
+      "createdAt": "2024-01-15T10:00:00.000Z"
+    }
+  ]
+}
