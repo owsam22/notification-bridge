@@ -1,0 +1,810 @@
+<!-- server/public/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NotifyBridge Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #667eea, #f093fb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p { font-size: 13px; opacity: 0.5; margin-top: 2px; }
+
+    /* Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 32px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 4px;
+      width: fit-content;
+    }
+    .tab {
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    .tab:hover:not(.active) { color: #ccc; background: rgba(255,255,255,0.05); }
+
+    /* Section */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Cards Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-2px); }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .card-title { font-weight: 700; font-size: 16px; }
+    .card-meta { font-size: 12px; opacity: 0.5; margin-top: 4px; }
+    .card-body { font-size: 13px; opacity: 0.7; margin-bottom: 12px; line-height: 1.5; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-active { background: rgba(56, 239, 125, 0.15); color: #38ef7d; }
+    .badge-inactive { background: rgba(255,70,70,0.15); color: #ff4646; }
+    .badge-info { background: rgba(102,126,234,0.15); color: #667eea; }
+    .badge-success { background: rgba(56,239,125,0.15); color: #38ef7d; }
+    .badge-warning { background: rgba(245,87,108,0.15); color: #f5576c; }
+    .badge-promo { background: rgba(255,210,0,0.15); color: #ffd200; }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(102,126,234,0.3); }
+    .btn-danger { background: rgba(255,70,70,0.15); color: #ff4646; }
+    .btn-danger:hover { background: rgba(255,70,70,0.3); }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #ccc; }
+    .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .btn-lg { padding: 12px 28px; font-size: 15px; }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #aaa;
+    }
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    input[type="datetime-local"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.3);
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #667eea;
+    }
+    textarea { resize: vertical; min-height: 60px; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 560px;
+      width: 90vw;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal h2 {
+      font-size: 20px;
+      margin-bottom: 24px;
+    }
+
+    /* Script tag display */
+    .script-tag {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(102,126,234,0.3);
+      border-radius: 10px;
+      padding: 14px;
+      font-family: 'SF Mono', monospace;
+      font-size: 12px;
+      word-break: break-all;
+      color: #38ef7d;
+      position: relative;
+      margin-top: 8px;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* Checkbox */
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .checkbox-item:hover { background: rgba(255,255,255,0.08); }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      opacity: 0.5;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* Toggle Switch */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle input:checked + .toggle-slider {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🔔 NotifyBridge</h1>
+    <p>Universal Notification Management</p>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="apps">📱 Apps</button>
+    <button class="tab" data-tab="notifications">📨 Notifications</button>
+  </div>
+
+  <!-- ═══ APPS SECTION ═══ -->
+  <div class="section active" id="section-apps">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>Registered Apps</h2>
+      <button class="btn btn-primary" onclick="openAppModal()">+ Add App</button>
+    </div>
+
+    <div class="grid" id="apps-grid">
+      <div class="empty">
+        <div class="empty-icon">📱</div>
+        <p>No apps registered yet</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ NOTIFICATIONS SECTION ═══ -->
+  <div class="section" id="section-notifications">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>Notifications</h2>
+      <button class="btn btn-primary" onclick="openNotifModal()">+ Create Notification</button>
+    </div>
+
+    <div class="grid" id="notif-grid">
+      <div class="empty">
+        <div class="empty-icon">📨</div>
+        <p>No notifications created yet</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP MODAL ═══ -->
+<div class="modal-backdrop" id="app-modal">
+  <div class="modal">
+    <h2>Register New App</h2>
+    <div class="form-group">
+      <label>App Name *</label>
+      <input type="text" id="app-name" placeholder="e.g. Expense Tracker">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="app-desc" placeholder="e.g. Personal finance app">
+    </div>
+    <div class="form-group">
+      <label>URL</label>
+      <input type="url" id="app-url" placeholder="e.g. https://myexpensetracker.com">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;">
+      <button class="btn btn-secondary" onclick="closeModal('app-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="createApp()">Register & Get Script Tag</button>
+    </div>
+
+    <div id="app-result" style="display:none;margin-top:20px;">
+      <label style="font-size:13px;color:#aaa;">Your one-line script tag:</label>
+      <div class="script-tag" id="app-script-output">
+        <button class="copy-btn" onclick="copyScript()">📋 Copy</button>
+        <code id="script-code"></code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NOTIFICATION MODAL ═══ -->
+<div class="modal-backdrop" id="notif-modal">
+  <div class="modal">
+    <h2 id="notif-modal-title">Create Notification</h2>
+
+    <input type="hidden" id="notif-edit-id">
+
+    <div class="form-group">
+      <label>Title *</label>
+      <input type="text" id="notif-title" placeholder="e.g. Need a Calculator?">
+    </div>
+
+    <div class="form-group">
+      <label>Message *</label>
+      <textarea id="notif-message" placeholder="e.g. Try our quick calculator tool for your expense calculations!"></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Link URL</label>
+        <input type="url" id="notif-link" placeholder="https://mycalculator.com">
+      </div>
+      <div class="form-group">
+        <label>Link Button Text</label>
+        <input type="text" id="notif-link-text" placeholder="Open Calculator" value="Check it out">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="notif-type">
+          <option value="info">💡 Info</option>
+          <option value="success">✅ Success</option>
+          <option value="warning">⚠️ Warning</option>
+          <option value="promo">🎉 Promo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Position</label>
+        <select id="notif-position">
+          <option value="bottom-right">Bottom Right</option>
+          <option value="bottom-left">Bottom Left</option>
+          <option value="top-right">Top Right</option>
+          <option value="top-left">Top Left</option>
+          <option value="center">Center</option>
+          <option value="top-center">Top Center</option>
+          <option value="bottom-center">Bottom Center</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Theme</label>
+        <select id="notif-theme">
+          <option value="dark">🌙 Dark</option>
+          <option value="light">☀️ Light</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Custom Icon (emoji)</label>
+        <input type="text" id="notif-icon" placeholder="e.g. 🧮 (leave empty for auto)">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Show Delay (seconds)</label>
+        <input type="number" id="notif-delay" value="2" min="0">
+      </div>
+      <div class="form-group">
+        <label>Priority (higher = first)</label>
+        <input type="number" id="notif-priority" value="0">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Frequency</label>
+        <select id="notif-frequency" onchange="toggleFreqHours()">
+          <option value="once">Once (never again after dismiss)</option>
+          <option value="session">Once Per Session</option>
+          <option value="every-x-hours">Every X Hours</option>
+          <option value="always">Always (every page load)</option>
+        </select>
+      </div>
+      <div class="form-group" id="freq-hours-group" style="display:none;">
+        <label>Repeat Every (hours)</label>
+        <input type="number" id="notif-freq-hours" value="24" min="1">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Start Date (optional)</label>
+        <input type="datetime-local" id="notif-start">
+      </div>
+      <div class="form-group">
+        <label>End Date (optional)</label>
+        <input type="datetime-local" id="notif-end">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Target Apps</label>
+      <div class="checkbox-group" id="target-apps-list">
+        <label class="checkbox-item">
+          <input type="checkbox" value="*" checked> All Apps
+        </label>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;">
+      <button class="btn btn-secondary" onclick="closeModal('notif-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNotification()">Save Notification</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const API = '';  // same origin
+
+  // ─── Tab switching ───
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`section-${tab.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  // ─── Modal helpers ───
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // Close on backdrop click
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) backdrop.classList.remove('open');
+    });
+  });
+
+  function toggleFreqHours() {
+    const freq = document.getElementById('notif-frequency').value;
+    document.getElementById('freq-hours-group').style.display =
+      freq === 'every-x-hours' ? 'block' : 'none';
+  }
+
+  // ─── APPS ───
+  let appsData = {};
+
+  async function loadApps() {
+    const res = await fetch(`${API}/api/apps`);
+    appsData = await res.json();
+    renderApps();
+  }
+
+  function renderApps() {
+    const grid = document.getElementById('apps-grid');
+    const entries = Object.values(appsData);
+
+    if (!entries.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">📱</div><p>No apps registered yet. Add one to get your script tag!</p></div>';
+      return;
+    }
+
+    grid.innerHTML = entries.map(app => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${app.name}</div>
+            <div class="card-meta">ID: ${app.id}</div>
+          </div>
+        </div>
+        ${app.description ? `<div class="card-body">${app.description}</div>` : ''}
+        <label style="font-size:12px;color:#888;">Script Tag:</label>
+        <div class="script-tag" style="font-size:11px;">
+          <button class="copy-btn" onclick="copyText(this.parentElement.querySelector('code').textContent)">📋</button>
+          <code>&lt;script src="${location.origin}/nb.js?app=${app.id}" defer&gt;&lt;/script&gt;</code>
+        </div>
+        <div class="card-actions" style="margin-top:12px;">
+          <button class="btn btn-danger btn-sm" onclick="deleteApp('${app.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openAppModal() {
+    document.getElementById('app-name').value = '';
+    document.getElementById('app-desc').value = '';
+    document.getElementById('app-url').value = '';
+    document.getElementById('app-result').style.display = 'none';
+    document.getElementById('app-modal').classList.add('open');
+  }
+
+  async function createApp() {
+    const name = document.getElementById('app-name').value.trim();
+    if (!name) return alert('App name is required');
+
+    const res = await fetch(`${API}/api/apps`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        description: document.getElementById('app-desc').value.trim(),
+        url: document.getElementById('app-url').value.trim()
+      })
+    });
+
+    const data = await res.json();
+
+    const scriptTag = `<script src="${location.origin}/nb.js?app=${data.appId}" defer><\/script>`;
+    document.getElementById('script-code').textContent = scriptTag;
+    document.getElementById('app-result').style.display = 'block';
+
+    loadApps();
+    updateTargetAppsList();
+  }
+
+  async function deleteApp(id) {
+    if (!confirm('Delete this app?')) return;
+    await fetch(`${API}/api/apps/${id}`, { method: 'DELETE' });
+    loadApps();
+    updateTargetAppsList();
+  }
+
+  function copyScript() {
+    copyText(document.getElementById('script-code').textContent);
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      // Brief visual feedback
+      const btn = event.target;
+      const original = btn.textContent;
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => btn.textContent = original, 1500);
+    });
+  }
+
+  // ─── NOTIFICATIONS ───
+  let notifsData = [];
+
+  async function loadNotifications() {
+    const res = await fetch(`${API}/api/notifications`);
+    notifsData = await res.json();
+    renderNotifications();
+  }
+
+  function renderNotifications() {
+    const grid = document.getElementById('notif-grid');
+
+    if (!notifsData.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">📨</div><p>No notifications yet. Create one to broadcast across your apps!</p></div>';
+      return;
+    }
+
+    grid.innerHTML = notifsData.map(n => `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">${n.icon || ''} ${n.title}</div>
+            <div class="card-meta">${n.targetApps.join(', ')} • ${n.frequency} • ${n.position}</div>
+          </div>
+          <span class="badge ${n.active ? 'badge-active' : 'badge-inactive'}">
+            ${n.active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+        <div class="card-body">${n.message}</div>
+        ${n.link ? `<div style="font-size:12px;margin-bottom:8px;"><a href="${n.link}" target="_blank" style="color:#667eea;">${n.link}</a></div>` : ''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge badge-${n.type}">${n.type}</span>
+          <span class="badge" style="background:rgba(255,255,255,0.05);color:#888;">${n.theme}</span>
+          <span class="badge" style="background:rgba(255,255,255,0.05);color:#888;">delay: ${n.delay}s</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-secondary btn-sm" onclick='editNotif("${n.id}")'>✏️ Edit</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleNotif('${n.id}', ${!n.active})">
+            ${n.active ? '⏸ Pause' : '▶ Activate'}
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="deleteNotif('${n.id}')">🗑</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateTargetAppsList() {
+    const container = document.getElementById('target-apps-list');
+    const apps = Object.values(appsData);
+
+    let html = `<label class="checkbox-item">
+      <input type="checkbox" value="*" id="target-all" onchange="toggleAllApps(this)"> All Apps
+    </label>`;
+
+    apps.forEach(app => {
+      html += `<label class="checkbox-item">
+        <input type="checkbox" value="${app.id}" class="target-app-cb"> ${app.name}
+      </label>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  function toggleAllApps(el) {
+    document.querySelectorAll('.target-app-cb').forEach(cb => {
+      cb.checked = false;
+      cb.disabled = el.checked;
+    });
+  }
+
+  function openNotifModal(editData) {
+    document.getElementById('notif-modal-title').textContent = editData ? 'Edit Notification' : 'Create Notification';
+    document.getElementById('notif-edit-id').value = editData ? editData.id : '';
+    document.getElementById('notif-title').value = editData ? editData.title : '';
+    document.getElementById('notif-message').value = editData ? editData.message : '';
+    document.getElementById('notif-link').value = editData ? editData.link : '';
+    document.getElementById('notif-link-text').value = editData ? editData.linkText : 'Check it out';
+    document.getElementById('notif-type').value = editData ? editData.type : 'info';
+    document.getElementById('notif-position').value = editData ? editData.position : 'bottom-right';
+    document.getElementById('notif-theme').value = editData ? editData.theme : 'dark';
+    document.getElementById('notif-icon').value = editData ? (editData.icon || '') : '';
+    document.getElementById('notif-delay').value = editData ? editData.delay : 2;
+    document.getElementById('notif-priority').value = editData ? editData.priority : 0;
+    document.getElementById('notif-frequency').value = editData ? editData.frequency : 'once';
+    document.getElementById('notif-freq-hours').value = editData ? editData.frequencyHours : 24;
+    document.getElementById('notif-start').value = editData && editData.startDate ? editData.startDate.slice(0, 16) : '';
+    document.getElementById('notif-end').value = editData && editData.endDate ? editData.endDate.slice(0, 16) : '';
+
+    toggleFreqHours();
+    updateTargetAppsList();
+
+    // Set target app checkboxes
+    if (editData) {
+      if (editData.targetApps.includes('*')) {
+        const allCb = document.getElementById('target-all');
+        if (allCb) allCb.checked = true;
+        toggleAllApps(allCb);
+      } else {
+        document.querySelectorAll('.target-app-cb').forEach(cb => {
+          cb.checked = editData.targetApps.includes(cb.value);
+        });
+      }
+    }
+
+    document.getElementById('notif-modal').classList.add('open');
+  }
+
+  function editNotif(id) {
+    const n = notifsData.find(x => x.id === id);
+    if (n) openNotifModal(n);
+  }
+
+  async function saveNotification() {
+    const editId = document.getElementById('notif-edit-id').value;
+    const title = document.getElementById('notif-title').value.trim();
+    const message = document.getElementById('notif-message').value.trim();
+
+    if (!title || !message) return alert('Title and message are required');
+
+    // Get target apps
+    let targetApps = [];
+    const allChecked = document.getElementById('target-all');
+    if (allChecked && allChecked.checked) {
+      targetApps = ['*'];
+    } else {
+      document.querySelectorAll('.target-app-cb:checked').forEach(cb => {
+        targetApps.push(cb.value);
+      });
+      if (!targetApps.length) targetApps = ['*'];
+    }
+
+    const payload = {
+      title,
+      message,
+      link: document.getElementById('notif-link').value.trim(),
+      linkText: document.getElementById('notif-link-text').value.trim() || 'Check it out',
+      type: document.getElementById('notif-type').value,
+      position: document.getElementById('notif-position').value,
+      theme: document.getElementById('notif-theme').value,
+      icon: document.getElementById('notif-icon').value.trim() || null,
+      delay: parseInt(document.getElementById('notif-delay').value) || 2,
+      priority: parseInt(document.getElementById('notif-priority').value) || 0,
+      frequency: document.getElementById('notif-frequency').value,
+      frequencyHours: parseInt(document.getElementById('notif-freq-hours').value) || 24,
+      startDate: document.getElementById('notif-start').value || null,
+      endDate: document.getElementById('notif-end').value || null,
+      targetApps
+    };
+
+    if (editId) {
+      await fetch(`${API}/api/notifications/${editId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await fetch(`${API}/api/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    closeModal('notif-modal');
+    loadNotifications();
+  }
+
+  async function toggleNotif(id, active) {
+    await fetch(`${API}/api/notifications/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active })
+    });
+    loadNotifications();
+  }
+
+  async function deleteNotif(id) {
+    if (!confirm('Delete this notification?')) return;
+    await fetch(`${API}/api/notifications/${id}`, { method: 'DELETE' });
+    loadNotifications();
+  }
+
+  // ─── Init ───
+  loadApps();
+  loadNotifications();
+</script>
+
+</body>
+</html>
